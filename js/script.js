@@ -157,6 +157,7 @@
   const panels    = overlay ? overlay.querySelectorAll('.modal-panel') : [];
   const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea';
   let lastTrigger = null;
+  let lastTriggerFromMobile = false;
 
   const signupForm     = document.getElementById('signupForm');
   const signupConfirm  = document.getElementById('signupConfirm');
@@ -223,6 +224,12 @@
     // Always start signup from a fresh form
     signupForm.hidden = false;
     signupConfirm.hidden = true;
+    // Clear any stale signup validation state
+    ['su-email', 'su-size'].forEach(id => {
+      const field = document.getElementById(id);
+      if (field) field.removeAttribute('aria-invalid');
+    });
+    signupForm.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.hidden = true; });
 
     lastTrigger = trigger || null;
     overlay.hidden = false;
@@ -237,12 +244,18 @@
   function closeModal() {
     overlay.hidden = true;
     unlockScroll(); // restores the exact scroll position
-    if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus({ preventScroll: true });
+    // If opened from the mobile drawer, that trigger is hidden again — return to the hamburger instead.
+    if (lastTriggerFromMobile && navToggle) navToggle.focus({ preventScroll: true });
+    else if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus({ preventScroll: true });
     lastTrigger = null;
+    lastTriggerFromMobile = false;
   }
 
   document.querySelectorAll('[data-open-modal]').forEach(btn => {
     btn.addEventListener('click', () => {
+      // Remember mobile-drawer origin BEFORE hiding (incl. login <-> signup switches inside the modal).
+      if (mobileMenu && !mobileMenu.hidden && mobileMenu.contains(btn)) lastTriggerFromMobile = true;
+      else if (!overlay || overlay.hidden) lastTriggerFromMobile = false;
       // Close the mobile drawer first if it is open (same behavior as tapping a drawer link)
       if (mobileMenu && navToggle && !mobileMenu.hidden) {
         mobileMenu.hidden = true;
@@ -286,9 +299,47 @@
     });
   });
 
-  /* ---------- 10. Signup prototype form ---------- */
+  /* ---------- 10. Signup prototype form ----------
+     Frontend-only validation: email required + format, team size required.
+     Name is optional. Success state shows only when valid; nothing is sent. */
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const suEmail = document.getElementById('su-email');
+  const suSize = document.getElementById('su-size');
+  const suEmailError = document.getElementById('su-email-error');
+  const suSizeError = document.getElementById('su-size-error');
+  const showFieldError = (field, errEl, message) => {
+    if (errEl) { errEl.textContent = message; errEl.hidden = false; }
+    if (field) field.setAttribute('aria-invalid', 'true');
+  };
+  const clearFieldError = (field, errEl) => {
+    if (errEl) { errEl.textContent = ''; errEl.hidden = true; }
+    if (field) field.removeAttribute('aria-invalid');
+  };
+  if (suEmail && suSize) {
+    suEmail.addEventListener('input', () => clearFieldError(suEmail, suEmailError));
+    suSize.addEventListener('change', () => clearFieldError(suSize, suSizeError));
+  }
   signupForm.addEventListener('submit', (e) => {
     e.preventDefault();
+    const email = suEmail ? suEmail.value.trim() : '';
+    let firstInvalid = null;
+    if (!email) {
+      showFieldError(suEmail, suEmailError, 'Enter your work email address.');
+      firstInvalid = firstInvalid || suEmail;
+    } else if (!EMAIL_RE.test(email)) {
+      showFieldError(suEmail, suEmailError, 'Enter a valid email address, like you@company.com.');
+      firstInvalid = firstInvalid || suEmail;
+    } else {
+      clearFieldError(suEmail, suEmailError);
+    }
+    if (suSize && !suSize.value) {
+      showFieldError(suSize, suSizeError, 'Select your team size to continue.');
+      firstInvalid = firstInvalid || suSize;
+    } else {
+      clearFieldError(suSize, suSizeError);
+    }
+    // Never show the confirmation state while required fields are invalid.
+    if (firstInvalid) { firstInvalid.focus({ preventScroll: true }); return; }
     // Demo behavior: show confirmation, send nothing anywhere.
     signupForm.hidden = true;
     signupConfirm.hidden = false;

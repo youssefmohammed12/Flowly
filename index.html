@@ -430,7 +430,7 @@
         </div>
         <div class="billing-toggle reveal" role="group" aria-label="Billing period">
           <button class="toggle-option" id="btnMonthly" aria-pressed="true">Monthly</button>
-          <button class="toggle-option" id="btnAnnual" aria-pressed="false">Annual <span class="save-badge">save 20%</span></button>
+          <button class="toggle-option" id="btnAnnual" aria-pressed="false">Annual <span class="save-badge">save over 20%</span></button>
         </div>
         <div class="row g-4 align-items-stretch justify-content-center">
           <div class="col-md-6 col-lg-4"><div class="pricing-card reveal">
@@ -681,12 +681,13 @@
             </div>
             <div class="field">
               <label for="su-email">Work email</label>
-              <input id="su-email" name="email" type="email" autocomplete="email" required placeholder="you@company.com">
+              <input id="su-email" name="email" type="email" autocomplete="email" required placeholder="you@company.com" aria-describedby="su-email-error">
+              <p class="field-error" id="su-email-error" role="alert" hidden></p>
             </div>
           </div>
           <div class="field">
             <label for="su-size">Team size</label>
-            <select id="su-size" name="size" required>
+            <select id="su-size" name="size" required aria-describedby="su-size-error">
               <option value="" selected disabled>Select your team size</option>
               <option value="Just me">Just me</option>
               <option value="2–10 people">2–10 people</option>
@@ -694,6 +695,7 @@
               <option value="51–200 people">51–200 people</option>
               <option value="200+ people">200+ people</option>
             </select>
+            <p class="field-error" id="su-size-error" role="alert" hidden></p>
           </div>
           <button type="submit" class="btn btn-primary w-100">Start Free Trial</button>
           <p class="form-note">Design prototype — nothing is sent or stored.</p>
