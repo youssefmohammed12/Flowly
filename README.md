@@ -23,29 +23,29 @@ The goal of the project was to create a polished, responsive SaaS landing-page c
 
 ## Screenshots
 
-> Screenshots are added manually. The files below are the expected captures in `screenshots/`.
+These are the same optimized captures used in the Flowly case study on the portfolio. They cover the main page sections, interactive UI previews, and the complete mobile experience. The full-height mobile capture is presented separately so its details remain readable.
 
-### Desktop
+### Page sections
 
-![Flowly desktop hero](screenshots/hero-desktop.png)
+![Flowly desktop hero](screenshots/hero-desktop.webp)
 
-![Flowly full page desktop](screenshots/full-page-desktop.png)
+![Flowly features section](screenshots/features.webp)
 
-### Mobile
+![Flowly illustrative pricing section](screenshots/pricing.webp)
 
-![Flowly mobile home](screenshots/mobile-home.png)
+![Flowly FAQ section](screenshots/faq.webp)
 
-![Flowly mobile menu](screenshots/mobile-menu.png)
+### Interactive UI previews
 
-### Interactive UI
+![Flowly product demo preview](screenshots/product-demo.webp)
 
-![Flowly product demo modal](screenshots/product-demo.png)
+![Flowly signup UI preview](screenshots/signup-preview.webp)
 
-![Flowly login modal](screenshots/login-modal.png)
+![Flowly login UI preview](screenshots/login-preview.webp)
 
-![Flowly signup modal](screenshots/signup-modal.png)
+### Mobile experience
 
-![Flowly pricing section](screenshots/pricing.png)
+![Complete Flowly mobile experience](screenshots/mobile-home.webp)
 
 ## Features
 
@@ -77,27 +77,27 @@ The goal of the project was to create a polished, responsive SaaS landing-page c
 
 ```text
 Flowly/
-├── index.html
-├── css/
-│   └── styles.css
-├── js/
-│   └── script.js
-├── images/
-│   ├── og-image.png
-│   └── favicon/
-│       ├── favicon.svg
-│       ├── favicon-32x32.png
-│       └── apple-touch-icon.png
-├── screenshots/
-│   ├── hero-desktop.png
-│   ├── full-page-desktop.png
-│   ├── mobile-home.png
-│   ├── mobile-menu.png
-│   ├── product-demo.png
-│   ├── login-modal.png
-│   ├── signup-modal.png
-│   └── pricing.png
-└── README.md
+|-- index.html
+|-- css/
+|   `-- styles.css
+|-- js/
+|   `-- script.js
+|-- images/
+|   |-- og-image.png
+|   `-- favicon/
+|       |-- favicon.svg
+|       |-- favicon-32x32.png
+|       `-- apple-touch-icon.png
+|-- screenshots/
+|   |-- hero-desktop.webp
+|   |-- features.webp
+|   |-- pricing.webp
+|   |-- faq.webp
+|   |-- product-demo.webp
+|   |-- signup-preview.webp
+|   |-- login-preview.webp
+|   `-- mobile-home.webp
+`-- README.md
 ```
 
 ## Design / UX
