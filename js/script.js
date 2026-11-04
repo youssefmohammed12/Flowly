@@ -39,6 +39,13 @@
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 992) closeMenu();
     });
+    // Escape closes the drawer and returns focus to its toggle.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileMenu.hidden) {
+        closeMenu();
+        navToggle.focus({ preventScroll: true });
+      }
+    });
   }
 
   /* ---------- 3. Pricing toggle (monthly / annual) ---------- */
@@ -76,6 +83,22 @@
         panel.classList.remove('is-open');
         window.setTimeout(() => { if (btn.getAttribute('aria-expanded') !== 'true') panel.hidden = true; }, 280);
       } else {
+        // Keep the accordion single-open: close any other expanded panel first.
+        document.querySelectorAll('.acc-btn[aria-expanded="true"]').forEach(openBtn => {
+          if (openBtn === btn) return;
+          const openPanel = document.getElementById(openBtn.getAttribute('aria-controls'));
+          openBtn.setAttribute('aria-expanded', 'false');
+          if (!openPanel) return;
+          if (prefersReducedMotion) {
+            openPanel.hidden = true;
+            openPanel.classList.remove('is-open');
+            return;
+          }
+          openPanel.classList.remove('is-open');
+          window.setTimeout(() => {
+            if (openBtn.getAttribute('aria-expanded') !== 'true') openPanel.hidden = true;
+          }, 280);
+        });
         panel.hidden = false;
         // Force reflow so the grid-rows transition plays.
         void panel.offsetWidth;
@@ -165,21 +188,16 @@
   const planLine       = document.getElementById('signupPlanLine');
   const loginForm      = document.getElementById('loginForm');
   const loginNote      = document.getElementById('loginNote');
-  const newsletterForm = document.querySelector('.newsletter');
+  const pwToggle       = document.getElementById('pwToggle');
+  const passInput      = document.getElementById('li-pass');
+  const inputWrap      = passInput ? passInput.closest('.input-wrap') : null;
+  const forgotBtn      = document.getElementById('forgotBtn');
+  const forgotNote     = document.getElementById('forgotNote');
+  const googleBtn      = document.getElementById('googleBtn');
+  const googleBtnMarkup = googleBtn ? googleBtn.innerHTML : '';
   const yearEl         = document.getElementById('year');
 
-  // Note: newsletter + footer-year run before the modal guard below so they
-  // always work even if a modal node is ever missing from the markup.
-  // Demo-only newsletter: replaces the form with a confirmation, sends nothing.
-  if (newsletterForm) {
-    newsletterForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const ok = document.createElement('p');
-      ok.className = 'newsletter-ok';
-      ok.textContent = "Thanks — you're on the list.";
-      newsletterForm.replaceWith(ok);
-    });
-  }
+  // Keep the footer year current even if a modal node is missing.
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
   if (!overlay || !modalEl || !closeBtn || !signupForm || !signupConfirm || !loginForm || !loginNote) return;
@@ -204,6 +222,22 @@
     catch (e) { window.scrollTo(0, savedScrollY); }
   }
 
+  function resetLoginPreview() {
+    if (loginForm) loginForm.reset();
+    if (loginNote) loginNote.hidden = true;
+    if (forgotNote) forgotNote.hidden = true;
+    if (passInput) passInput.type = 'password';
+    if (inputWrap) inputWrap.classList.remove('revealed');
+    if (pwToggle) {
+      pwToggle.setAttribute('aria-label', 'Show password');
+      pwToggle.setAttribute('aria-pressed', 'false');
+    }
+    if (googleBtn) {
+      googleBtn.disabled = false;
+      googleBtn.innerHTML = googleBtnMarkup;
+    }
+  }
+
   function setPlan(plan) {
     if (!planLine) return;
     planLine.hidden = !plan;
@@ -212,16 +246,21 @@
       planLine.append('Selected plan: ');
       const strong = document.createElement('b');
       strong.textContent = plan; // safe: never inject trigger data as HTML
-      planLine.append(strong, ' · 14-day free trial');
+      planLine.append(strong, ' · example plan only');
     }
   }
 
   function openModal(name, trigger) {
+    // Preserve the original page trigger when switching between modal panels.
+    // The control that switches panels becomes hidden and cannot receive focus on close.
+    const isPanelSwitch = !overlay.hidden;
     panels.forEach(p => { p.hidden = p.dataset.panel !== name; });
     const heading = overlay.querySelector('.modal-panel:not([hidden]) .modal-title');
     if (heading) modalEl.setAttribute('aria-labelledby', heading.id);
 
-    // Always start signup from a fresh form
+    // Each modal visit starts with clean, sample-only form state.
+    resetLoginPreview();
+    signupForm.reset();
     signupForm.hidden = false;
     signupConfirm.hidden = true;
     // Clear any stale signup validation state
@@ -231,7 +270,7 @@
     });
     signupForm.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.hidden = true; });
 
-    lastTrigger = trigger || null;
+    if (!isPanelSwitch) lastTrigger = trigger || null;
     overlay.hidden = false;
     lockScroll(); // freeze background scroll without breaking sticky header
 
@@ -244,6 +283,14 @@
   function closeModal() {
     overlay.hidden = true;
     unlockScroll(); // restores the exact scroll position
+    // Clear sample input from the DOM as soon as a preview is closed.
+    resetLoginPreview();
+    signupForm.reset();
+    signupForm.hidden = false;
+    signupConfirm.hidden = true;
+    if (planLine) { planLine.hidden = true; planLine.textContent = ''; }
+    signupForm.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.hidden = true; });
+    ['su-email', 'su-size'].forEach(id => document.getElementById(id)?.removeAttribute('aria-invalid'));
     // If opened from the mobile drawer, that trigger is hidden again — return to the hamburger instead.
     if (lastTriggerFromMobile && navToggle) navToggle.focus({ preventScroll: true });
     else if (lastTrigger && document.contains(lastTrigger)) lastTrigger.focus({ preventScroll: true });
@@ -347,13 +394,6 @@
   });
 
   /* ---------- 11. Login prototype interactions ---------- */
-  const pwToggle = document.getElementById('pwToggle');
-  const passInput = document.getElementById('li-pass');
-  const inputWrap = passInput ? passInput.closest('.input-wrap') : null;
-  const forgotBtn = document.getElementById('forgotBtn');
-  const forgotNote = document.getElementById('forgotNote');
-  const googleBtn = document.getElementById('googleBtn');
-
   // Password visibility toggle
   if (pwToggle && passInput && inputWrap) {
     pwToggle.addEventListener('click', () => {
@@ -377,10 +417,10 @@
     });
   }
 
-  // Continue with Google — prototype behavior
+  // Google sign-in UI preview — no authentication provider is connected.
   if (googleBtn) {
     googleBtn.addEventListener('click', () => {
-      googleBtn.textContent = 'Design prototype — no real auth provider.';
+      googleBtn.textContent = 'Preview only — no authentication took place.';
       googleBtn.disabled = true;
     });
   }
